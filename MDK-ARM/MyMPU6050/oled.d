@@ -1,5 +1,8 @@
 mympu6050\oled.o: ..\Core\Src\oled.c
 mympu6050\oled.o: ../Core/Inc/oled.h
+mympu6050\oled.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+mympu6050\oled.o: ../Core/Inc/i2c.h
+mympu6050\oled.o: ../Core/Inc/main.h
 mympu6050\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 mympu6050\oled.o: ../Core/Inc/stm32f1xx_hal_conf.h
 mympu6050\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
@@ -7,7 +10,6 @@ mympu6050\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h
 mympu6050\oled.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 mympu6050\oled.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xb.h
 mympu6050\oled.o: ../Drivers/CMSIS/Include/core_cm3.h
-mympu6050\oled.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
 mympu6050\oled.o: ../Drivers/CMSIS/Include/cmsis_version.h
 mympu6050\oled.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
 mympu6050\oled.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
@@ -28,6 +30,7 @@ mympu6050\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h
 mympu6050\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 mympu6050\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc.h
 mympu6050\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc_ex.h
-mympu6050\oled.o: ../Core/Inc/i2c.h
-mympu6050\oled.o: ../Core/Inc/main.h
+mympu6050\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
+mympu6050\oled.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 mympu6050\oled.o: ../Core/Inc/oledfont.h
+mympu6050\oled.o: ../Core/Inc/delay.h

@@ -188,7 +188,7 @@ uint8_t mpu6050_Init(void){
     {
         mpu_write(MPU_ADDR,MPU_PWR_MGMT1_REG,0X01);	//设置CLKSEL,PLL X轴为参考
         mpu_write(MPU_ADDR,MPU_PWR_MGMT2_REG,0X00);	//加速度与陀螺仪都工作
-        MPU_Set_Rate(200);						//设置采样率
+        MPU_Set_Rate(DEFAULT_MPU_HZ);						//设置采样率
     } else return 1;
   return 0;
 }
@@ -253,6 +253,9 @@ unsigned short inv_orientation_matrix_to_scalar(
 
     return scalar;
 }
+		
+float pitch_bias = 7.4,roll_bias = -0.945,yaw_bias = 2.7;
+uint8_t bias_flag=1;
 
 /**
 	* @brief		原点自检
@@ -261,28 +264,37 @@ unsigned short inv_orientation_matrix_to_scalar(
   */	
 uint8_t run_self_test(void)
 {
-    int result;
-    //char test_packet[4] = {0};
-    long gyro[3], accel[3];
-    result = mpu_run_self_test(gyro, accel);
-    if (result == 0x3){
-        /* Test passed. We can trust the gyro data here, so let's push it down
-        * to the DMP.
-        */
-        float sens;
-        unsigned short accel_sens;
-        mpu_get_gyro_sens(&sens);
-        gyro[0] = (long)(gyro[0] * sens);
-        gyro[1] = (long)(gyro[1] * sens);
-        gyro[2] = (long)(gyro[2] * sens);
-        dmp_set_gyro_bias(gyro);
-        mpu_get_accel_sens(&accel_sens);
-        accel[0] *= accel_sens;
-        accel[1] *= accel_sens;
-        accel[2] *= accel_sens;
-        dmp_set_accel_bias(accel);
-        return 0;
-    } else return 1;
+//    int result;
+//    //char test_packet[4] = {0};
+//    long gyro[3], accel[3];
+//    result = mpu_run_self_test(gyro, accel);
+//    if (result == 0x3){
+//        /* Test passed. We can trust the gyro data here, so let's push it down
+//        * to the DMP.
+//        */
+//        float sens;
+//        unsigned short accel_sens;
+//        mpu_get_gyro_sens(&sens);
+//        gyro[0] = (long)(gyro[0] * sens);
+//        gyro[1] = (long)(gyro[1] * sens);
+//        gyro[2] = (long)(gyro[2] * sens);
+//        dmp_set_gyro_bias(gyro);
+//        mpu_get_accel_sens(&accel_sens);
+//        accel[0] *= accel_sens;
+//        accel[1] *= accel_sens;
+//        accel[2] *= accel_sens;
+//        dmp_set_accel_bias(accel);
+//        return 0;
+//    } else return 1;
+
+	//改写零点校准
+//	uint16_t i=0;
+//	for(i=0;i<1500;i++){
+//		Delay_ms(8);
+//		mpu_dmp_get_data(&pitch_bias,&roll_bias,&yaw_bias);
+//	}
+		bias_flag = 0;
+	return 0;
 }
 
 /**
@@ -337,7 +349,7 @@ uint8_t mpu_dmp_init(void){
 		DMP_FEATURE_GYRO_CAL:
 			Calibrates the gyro data after eight seconds of no motion.
 	*/
-	if(dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_TAP |DMP_FEATURE_ANDROID_ORIENT |
+	if(dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_TAP |DMP_FEATURE_ANDROID_ORIENT | DMP_FEATURE_PEDOMETER |
 												DMP_FEATURE_SEND_RAW_ACCEL | DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL))	return 6;
 	//9.设置dmp输出（FIFO）速率
 	if(dmp_set_fifo_rate(DEFAULT_MPU_HZ))	return 7;
@@ -385,7 +397,6 @@ uint8_t mpu_get_accelerometer(short *ax,short *ay,short *az){
     }
     return res;
 }
-
 /**
   * @brief		获取四元数，解算姿态
   * @param		pitch		俯仰角 	精度:0.1°   范围:-90.0° <---> +90.0°
@@ -393,8 +404,10 @@ uint8_t mpu_get_accelerometer(short *ax,short *ay,short *az){
   * @param		yaw			航向角  精度:0.1°   范围:-180.0°<---> +180.0°
   * @return  	0 成功；否则失败
   */
+uint16_t times=0,times2=0;
 uint8_t mpu_dmp_get_data(float *pitch,float *roll,float *yaw){
     float q0=1.0f,q1=0.0f,q2=0.0f,q3=0.0f;
+		const float k=0.7;
     unsigned long sensor_timestamp;
     short gyro[3], accel[3], sensors;
     unsigned char more;
@@ -410,15 +423,30 @@ uint8_t mpu_dmp_get_data(float *pitch,float *roll,float *yaw){
     /* Unlike gyro and accel, quaternions are written to the FIFO in the body frame, q30.
      * The orientation is set by the scalar passed to dmp_set_orientation during initialization.
     **/
+		if(sensors&INV_WXYZ_QUAT&&bias_flag){
+        q0 = quat[0] / q30;	//q30格式转换为浮点数
+        q1 = quat[1] / q30;
+        q2 = quat[2] / q30;
+        q3 = quat[3] / q30;
+        //计算得到俯仰角/横滚角/航向角
+        *pitch = (*pitch + (asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3)*k+(*pitch)*(1-k) )/2 ;	// pitch
+        *roll  = (*roll+(atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3)*k+(*roll)*(1-k) )/2;	// roll
+        *yaw   = (*yaw+ (atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3)*k+(*yaw)*(1-k))/2 ;	//yaw
+    } 
+		else
     if(sensors&INV_WXYZ_QUAT){
         q0 = quat[0] / q30;	//q30格式转换为浮点数
         q1 = quat[1] / q30;
         q2 = quat[2] / q30;
         q3 = quat[3] / q30;
         //计算得到俯仰角/横滚角/航向角
-        *pitch = asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3;	// pitch
-        *roll  = atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3;	// roll
-        *yaw   = atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3;	//yaw
+        *pitch = (asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3)*k+(*pitch)*(1-k) ;//- ( pitch_bias * times/35);	// pitch
+        *roll  = (atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3)*k+(*roll)*(1-k) ;//- (roll_bias* times/35);	// roll
+        *yaw   = (atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3)*k+(*yaw)*(1-k) ;//-  (yaw_bias*times2/30);	//yaw
+			//if(times++ >= 35)times = 35;
+			//if(times2++>=30)times2 = 30;
+			times++;
+			times2++;
     } else return 2;
     return 0;
 }

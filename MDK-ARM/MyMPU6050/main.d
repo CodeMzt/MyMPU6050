@@ -28,10 +28,13 @@ mympu6050\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h
 mympu6050\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 mympu6050\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc.h
 mympu6050\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc_ex.h
+mympu6050\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
+mympu6050\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 mympu6050\main.o: ../Core/Inc/i2c.h
 mympu6050\main.o: ../Core/Inc/rtc.h
+mympu6050\main.o: ../Core/Inc/tim.h
 mympu6050\main.o: ../Core/Inc/gpio.h
 mympu6050\main.o: ../Core/Inc/mpu6050.h
-mympu6050\main.o: ..\Core\Driver\driver\eMPL\inv_mpu.h
+mympu6050\main.o: ../Core/Driver/driver/eMPL/inv_mpu.h
 mympu6050\main.o: ../Core/Inc/oled.h
 mympu6050\main.o: ../Core/Inc/delay.h

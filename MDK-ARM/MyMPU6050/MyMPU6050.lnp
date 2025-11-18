@@ -10,6 +10,7 @@
 "mympu6050\gpio.o"
 "mympu6050\i2c.o"
 "mympu6050\rtc.o"
+"mympu6050\tim.o"
 "mympu6050\stm32f1xx_it.o"
 "mympu6050\stm32f1xx_hal_msp.o"
 "mympu6050\stm32f1xx_hal_gpio_ex.o"

@@ -21,6 +21,7 @@
 #include "main.h"
 #include "i2c.h"
 #include "rtc.h"
+#include "tim.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -50,6 +51,8 @@
 /* USER CODE BEGIN PV */
 float pitch,roll,yaw;
 uint8_t display_buf[20];
+extern float pitch_bias,roll_bias,yaw_bias;
+extern uint16_t times,times2;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -69,6 +72,7 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -93,11 +97,14 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_RTC_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 	OLED_Init();
-	OLED_Clear();
 	mpu6050_Init();
 	mpu_dmp_init();
+	HAL_TIM_Base_Start_IT(&htim1);
+	OLED_ShowString(0,48,"Init Success",8);
+	OLED_UpdateScreen(5,8);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,13 +113,13 @@ int main(void)
 	
   while (1)
   {	
-		sprintf((char *)display_buf,"pitch:%.2f   ",pitch);
-		OLED_ShowString(0,2,display_buf,16);
-		sprintf((char *)display_buf,"roll:%.2f   ",roll);
-		OLED_ShowString(0,4,display_buf,16);
-		sprintf((char *)display_buf,"yaw:%.2f   ",yaw);
-		OLED_ShowString(0,6,display_buf,16);
-		mpu_dmp_get_data(&pitch,&roll,&yaw);
+		sprintf((char *)display_buf,"pitch:%.1f",pitch);
+		OLED_ShowString(0,0,display_buf,8);
+		sprintf((char *)display_buf,"roll:%.1f %3d",roll,times2);
+		OLED_ShowString(0,16,display_buf,8);
+		sprintf((char *)display_buf,"yaw:%.1f %.2f",yaw,yaw_bias);
+		OLED_ShowString(0,32,display_buf,8);
+		OLED_UpdateScreen(0,8);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -145,6 +152,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -167,7 +175,10 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	__HAL_TIM_SetCounter(htim,0);
+	mpu_dmp_get_data(&pitch,&roll,&yaw);
+}
 /* USER CODE END 4 */
 
 /**
@@ -184,8 +195,7 @@ void Error_Handler(void)
   }
   /* USER CODE END Error_Handler_Debug */
 }
-
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
@@ -201,5 +211,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -29,8 +29,10 @@ mympu6050\mpu6050.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_i2c.h
 mympu6050\mpu6050.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 mympu6050\mpu6050.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc.h
 mympu6050\mpu6050.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rtc_ex.h
+mympu6050\mpu6050.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
+mympu6050\mpu6050.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 mympu6050\mpu6050.o: ../Core/Inc/MyI2C.h
 mympu6050\mpu6050.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
-mympu6050\mpu6050.o: ..\Core\Driver\driver\eMPL\inv_mpu.h
-mympu6050\mpu6050.o: ..\Core\Driver\driver\eMPL\inv_mpu_dmp_motion_driver.h
+mympu6050\mpu6050.o: ../Core/Driver/driver/eMPL/inv_mpu.h
+mympu6050\mpu6050.o: ../Core/Driver/driver/eMPL/inv_mpu_dmp_motion_driver.h
 mympu6050\mpu6050.o: ../Core/Inc/delay.h
