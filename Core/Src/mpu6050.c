@@ -53,7 +53,6 @@ void myget_ms(unsigned long *time)
   */
 unsigned short mpu_write(unsigned char slave_addr, unsigned char reg_addr,
 	unsigned char const data){
-		int i;
 		I2C_Start();
 		I2C_SendByte(slave_addr<<1|0);
 		I2C_ReceiveAck();
@@ -98,7 +97,6 @@ unsigned short mpu_lenwrite(unsigned char slave_addr, unsigned char reg_addr,
   */
 unsigned short mpu_read(unsigned char slave_addr, unsigned char reg_addr,
 	unsigned char *data){
-		int i;
 		I2C_Start();
 		I2C_SendByte(slave_addr<<1 | 0);
 		I2C_ReceiveAck();
@@ -254,16 +252,16 @@ unsigned short inv_orientation_matrix_to_scalar(
     return scalar;
 }
 		
-float pitch_bias = 7.4,roll_bias = -0.945,yaw_bias = 2.7;
-uint8_t bias_flag=1;
+extern uint8_t pitch_bias[1024],roll_bias[1024],yaw_bias[1024];
+extern uint16_t bias_flag;
 
-/**
-	* @brief		原点自检
-  * @param		无
-  * @return  	0：正常
-  */	
-uint8_t run_self_test(void)
-{
+///**
+//	* @brief		原点自检
+//  * @param		无
+//  * @return  	0：正常
+//  */	
+//uint8_t run_self_test(void)
+//{
 //    int result;
 //    //char test_packet[4] = {0};
 //    long gyro[3], accel[3];
@@ -287,15 +285,15 @@ uint8_t run_self_test(void)
 //        return 0;
 //    } else return 1;
 
-	//改写零点校准
+//	//改写零点校准
 //	uint16_t i=0;
 //	for(i=0;i<1500;i++){
 //		Delay_ms(8);
 //		mpu_dmp_get_data(&pitch_bias,&roll_bias,&yaw_bias);
 //	}
-		bias_flag = 0;
-	return 0;
-}
+//	bias_flag = 0;
+//	return 0;
+//}
 
 /**
   * @brief		mpu_dmp初始化
@@ -356,9 +354,9 @@ uint8_t mpu_dmp_init(void){
 	//11.开启dmp
 	if(mpu_set_dmp_state(1))	return 9;
 	//10.原点校准
-	if(run_self_test())
-		return 8
-			;
+//	if(run_self_test())
+//		return 8
+//			;
 	return result;
 }
 
@@ -404,10 +402,10 @@ uint8_t mpu_get_accelerometer(short *ax,short *ay,short *az){
   * @param		yaw			航向角  精度:0.1°   范围:-180.0°<---> +180.0°
   * @return  	0 成功；否则失败
   */
-uint16_t times=0,times2=0;
+uint16_t times=0;
 uint8_t mpu_dmp_get_data(float *pitch,float *roll,float *yaw){
     float q0=1.0f,q1=0.0f,q2=0.0f,q3=0.0f;
-		const float k=0.7;
+		const float k=0.95;
     unsigned long sensor_timestamp;
     short gyro[3], accel[3], sensors;
     unsigned char more;
@@ -429,24 +427,31 @@ uint8_t mpu_dmp_get_data(float *pitch,float *roll,float *yaw){
         q2 = quat[2] / q30;
         q3 = quat[3] / q30;
         //计算得到俯仰角/横滚角/航向角
-        *pitch = (*pitch + (asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3)*k+(*pitch)*(1-k) )/2 ;	// pitch
-        *roll  = (*roll+(atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3)*k+(*roll)*(1-k) )/2;	// roll
-        *yaw   = (*yaw+ (atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3)*k+(*yaw)*(1-k))/2 ;	//yaw
+        *pitch = (asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3)*k+(*pitch)*(1-k)  ;	// pitch
+        *roll  = (atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3)*k+(*roll)*(1-k);	// roll
+        *yaw   = (atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3)*k+(*yaw)*(1-k) ;	//yaw
+//			  *pitch = (asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3)*k+(*pitch)*(1-k) ;	// pitch
+//        *roll  = (atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3)*k+(*roll)*(1-k) ;// roll
+//        *yaw   = (atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3)*k+(*yaw)*(1-k) ;	//yaw
     } 
-		else
-    if(sensors&INV_WXYZ_QUAT){
+    else if(sensors&INV_WXYZ_QUAT){
         q0 = quat[0] / q30;	//q30格式转换为浮点数
         q1 = quat[1] / q30;
         q2 = quat[2] / q30;
         q3 = quat[3] / q30;
         //计算得到俯仰角/横滚角/航向角
-        *pitch = (asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3)*k+(*pitch)*(1-k) ;//- ( pitch_bias * times/35);	// pitch
-        *roll  = (atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3)*k+(*roll)*(1-k) ;//- (roll_bias* times/35);	// roll
-        *yaw   = (atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3)*k+(*yaw)*(1-k) ;//-  (yaw_bias*times2/30);	//yaw
-			//if(times++ >= 35)times = 35;
-			//if(times2++>=30)times2 = 30;
-			times++;
-			times2++;
-    } else return 2;
+			//注：偏差项乘的为经验系数，提高自校准时长可免除此系数
+			if(times<=2047){
+        *pitch = (asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3)*k+(*pitch)*(1-k) -  pitch_bias[times/2]*0.96/10 ;	// pitch
+        *roll  = (atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3)*k+(*roll)*(1-k) + roll_bias[times/2]*0.95/10;	// roll
+        *yaw   = (atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3)*k+(*yaw)*(1-k) - yaw_bias[times/2]*1.0/10;	//yaw
+				++times;
+			}else {
+				*pitch = (asin(-2 * q1 * q3 + 2 * q0* q2)* 57.3)*k+(*pitch)*(1-k) -  pitch_bias[1023]*0.96/10 ;	// pitch
+        *roll  = (atan2(2 * q2 * q3 + 2 * q0 * q1, -2 * q1 * q1 - 2 * q2* q2 + 1)* 57.3)*k+(*roll)*(1-k) + roll_bias[1023]*0.95/10;	// roll
+        *yaw   = (atan2(2*(q1*q2 + q0*q3),q0*q0+q1*q1-q2*q2-q3*q3) * 57.3)*k+(*yaw)*(1-k) - yaw_bias[1023]*1.07/10;	//yaw
+			}
+		}
+     else return 2;
     return 0;
 }

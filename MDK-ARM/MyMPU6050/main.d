@@ -38,3 +38,4 @@ mympu6050\main.o: ../Core/Inc/mpu6050.h
 mympu6050\main.o: ../Core/Driver/driver/eMPL/inv_mpu.h
 mympu6050\main.o: ../Core/Inc/oled.h
 mympu6050\main.o: ../Core/Inc/delay.h
+mympu6050\main.o: ../Core/Inc/Store.h

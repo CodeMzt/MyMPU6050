@@ -30,6 +30,7 @@
 #include "inv_mpu.h"
 #include "oled.h"
 #include "delay.h"
+#include "Store.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,8 +52,9 @@
 /* USER CODE BEGIN PV */
 float pitch,roll,yaw;
 uint8_t display_buf[20];
-extern float pitch_bias,roll_bias,yaw_bias;
-extern uint16_t times,times2;
+uint8_t pitch_bias[1024],roll_bias[1024],yaw_bias[1024];
+float temp1=0,temp2=0,temp3=0;
+uint16_t bias_flag = 1;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -102,6 +104,23 @@ int main(void)
 	OLED_Init();
 	mpu6050_Init();
 	mpu_dmp_init();
+	//自检
+	if(Store_Init()){
+		OLED_ShowString(0,0,"For the First Time.",6);
+		OLED_ShowString(0,8,"Start Self Test...",6);
+		OLED_UpdateScreen(0,8);	
+		HAL_TIM_Base_Start_IT(&htim1);
+		while(bias_flag<=2048){
+			sprintf((char *)display_buf,"[%d%%]",bias_flag*100/2047);
+			OLED_ShowString(0,16,display_buf,8);
+			OLED_UpdateScreen(2,4);
+		}
+		OLED_ShowString(0,32,"Finished!Resetting..",6);
+		OLED_UpdateScreen(4,6);
+		Store_Save();
+		HAL_NVIC_SystemReset();
+	}else bias_flag = 0;
+	
 	HAL_TIM_Base_Start_IT(&htim1);
 	OLED_ShowString(0,48,"Init Success",8);
 	OLED_UpdateScreen(5,8);
@@ -115,9 +134,9 @@ int main(void)
   {	
 		sprintf((char *)display_buf,"pitch:%.1f",pitch);
 		OLED_ShowString(0,0,display_buf,8);
-		sprintf((char *)display_buf,"roll:%.1f %3d",roll,times2);
+		sprintf((char *)display_buf,"roll:%.1f",roll);
 		OLED_ShowString(0,16,display_buf,8);
-		sprintf((char *)display_buf,"yaw:%.1f %.2f",yaw,yaw_bias);
+		sprintf((char *)display_buf,"yaw:%.1f",yaw);
 		OLED_ShowString(0,32,display_buf,8);
 		OLED_UpdateScreen(0,8);
     /* USER CODE END WHILE */
@@ -176,8 +195,23 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	__HAL_TIM_SetCounter(htim,0);
-	mpu_dmp_get_data(&pitch,&roll,&yaw);
+	if(bias_flag>2048){
+		__HAL_TIM_DISABLE_IT(htim, TIM_IT_UPDATE);
+		return;
+	}
+	else if(bias_flag %2 ){
+		mpu_dmp_get_data(&pitch,&roll,&yaw);
+		bias_flag ++;
+			return;
+	}else if( bias_flag && bias_flag%2 == 0){
+		mpu_dmp_get_data(&temp1,&temp2,&temp3);
+		pitch_bias[bias_flag/2-1]= (uint8_t)((temp1*10 + pitch*10)/2);
+		roll_bias[bias_flag/2-1]= (uint8_t)(-temp2*10 + -roll*10)/2;
+		yaw_bias[bias_flag/2-1]= (uint8_t)(temp3*10 + yaw*10)/2;
+		bias_flag ++;
+		return;
+	}
+	else mpu_dmp_get_data(&pitch,&roll,&yaw);
 }
 /* USER CODE END 4 */
 

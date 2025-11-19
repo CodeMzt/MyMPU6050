@@ -1,0 +1,11 @@
+mympu6050\store.o: ..\Core\Src\Store.c
+mympu6050\store.o: D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include\stm32f10x.h
+mympu6050\store.o: .\RTE\_MyMPU6050\RTE_Components.h
+mympu6050\store.o: ../Drivers/CMSIS/Include/core_cm3.h
+mympu6050\store.o: D:\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
+mympu6050\store.o: ../Drivers/CMSIS/Include/cmsis_version.h
+mympu6050\store.o: ../Drivers/CMSIS/Include/cmsis_compiler.h
+mympu6050\store.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
+mympu6050\store.o: D:\Keil_v5\Packs\Keil\STM32F1xx_DFP\2.4.1\Device\Include\system_stm32f10x.h
+mympu6050\store.o: ../Core/Inc/Store.h
+mympu6050\store.o: ../Core/Inc/Flash.h

@@ -13,6 +13,8 @@
 "mympu6050\tim.o"
 "mympu6050\stm32f1xx_it.o"
 "mympu6050\stm32f1xx_hal_msp.o"
+"mympu6050\store.o"
+"mympu6050\flash.o"
 "mympu6050\stm32f1xx_hal_gpio_ex.o"
 "mympu6050\stm32f1xx_hal_i2c.o"
 "mympu6050\stm32f1xx_hal.o"
